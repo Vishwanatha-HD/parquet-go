@@ -8,6 +8,7 @@ package rle
 import (
 	"encoding/binary"
 	"fmt"
+	"golang.org/x/sys/cpu"
 	"io"
 	"unsafe"
 
@@ -151,7 +152,17 @@ func encodeBytes(dst, src []byte, bitWidth uint) ([]byte, error) {
 	}
 
 	if len(src) >= 8 {
-		words := unsafe.Slice((*uint64)(unsafe.Pointer(&src[0])), len(src)/8)
+		srcLen := (len(src) / 8)
+		words := make([]uint64, srcLen)
+		if cpu.IsBigEndian {
+			idx := 0
+			for k := 0; k < srcLen; k++ {
+				words[k] = binary.LittleEndian.Uint64((src)[idx:(8 + idx)])
+				idx += 8
+			}
+		} else {
+			words = unsafe.Slice((*uint64)(unsafe.Pointer(&src[0])), len(src)/8)
+		}
 
 		for i := 0; i < len(words); {
 			j := i
@@ -385,6 +396,12 @@ func decodeInt32(dst, src []byte, bitWidth uint) ([]byte, error) {
 
 			bits := [4]byte{}
 			copy(bits[:], src[i:j])
+
+			//swap the bytes in the "bits" array to take care of big endian arch
+			if cpu.IsBigEndian {
+				bits[0], bits[1] = bits[3], bits[2]
+			}
+
 			dst = appendRepeat(dst, bits[:], count)
 			i = j
 		}
