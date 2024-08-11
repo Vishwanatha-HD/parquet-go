@@ -399,7 +399,8 @@ func decodeInt32(dst, src []byte, bitWidth uint) ([]byte, error) {
 
 			//swap the bytes in the "bits" array to take care of big endian arch
 			if cpu.IsBigEndian {
-				bits[0], bits[1] = bits[3], bits[2]
+				tmp := binary.LittleEndian.Uint32(bits[:])
+				binary.BigEndian.PutUint32(bits[:], tmp)
 			}
 
 			dst = appendRepeat(dst, bits[:], count)
