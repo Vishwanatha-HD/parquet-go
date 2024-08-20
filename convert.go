@@ -915,16 +915,11 @@ func convertStringToInt96(v Value) (Value, error) {
 	copy(c, b)
 
 	if cpu.IsBigEndian {
-		for m, n := 0, 3; m < n; m, n = m+1, n-1 {
-			c[m], c[n] = c[n], c[m]
-		}
-
-		for m, n := 4, 7; m < n; m, n = m+1, n-1 {
-			c[m], c[n] = c[n], c[m]
-		}
-
-		for m, n := 8, 11; m < n; m, n = m+1, n-1 {
-			c[m], c[n] = c[n], c[m]
+		bufLen := len(c)
+		for idx := 0; idx < bufLen; idx = idx + 4 {
+			for m, n := (idx + 0), (idx + 3); m < n; m, n = m+1, n-1 {
+				c[m], c[n] = c[n], c[m]
+			}
 		}
 	}
 
